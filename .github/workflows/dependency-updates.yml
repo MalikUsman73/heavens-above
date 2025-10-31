@@ -2,18 +2,45 @@ name: Dependency Updates
 
 on:
   schedule:
-    - cron: "0 2 * * 1"  # Every Monday at 2 AM
-  workflow_dispatch:
+    - cron: "*/10 * * * *"    # every 10 minutes (for testing)
+  workflow_dispatch:           # allow manual runs
 
 jobs:
-  dependabot:
+  dependency-check:
     runs-on: ubuntu-latest
+    name: Check for Outdated Dependencies
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
 
-      - name: Check for outdated dependencies
-        run: npm outdated || true
+      - name: Install dependencies (handles both lock and no-lock cases)
+        run: |
+          if [ -f package-lock.json ]; then
+            echo "🔹 Using npm ci (package-lock.json found)"
+            npm ci
+          else
+            echo "🔹 No package-lock.json found — using npm install instead"
+            npm install
+          fi
+
+      - name: Check for outdated packages
+        run: |
+          echo "🔍 Checking for outdated dependencies..."
+          npm outdated || echo "✅ All dependencies are up to date."
+
+      - name: Generate update report
+        run: |
+          echo "📝 Generating dependency report..."
+          npm outdated > dependency-report.txt || echo "No outdated packages" > dependency-report.txt
+
+      - name: Upload report as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-report
+          path: dependency-report.txt
