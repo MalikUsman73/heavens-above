@@ -1,18 +1,41 @@
 name: Generate Release Notes
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:     # Manual trigger from Actions tab
   push:
     tags:
-      - 'v*.*.*'
+      - 'v*.*.*'         # Automatically trigger when pushing version tags
 
 jobs:
   release:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    name: Generate and Upload Release Notes
 
-      - name: Generate release notes
-        uses: release-drafter/release-drafter@v6
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create Release Notes
+        id: notes
+        run: |
+          echo "📝 Generating release notes..."
+          echo "Release generated at $(date)" > release-notes.txt
+          echo "" >> release-notes.txt
+          echo "Recent commits:" >> release-notes.txt
+          git log -5 --pretty=format:"- %s (%an)" >> release-notes.txt
+          echo "" >> release-notes.txt
+          echo "✅ Release Notes Generated Successfully."
+
+      - name: Upload release notes as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: release-notes.txt
+
+      - name: Auto-create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: release-notes.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
