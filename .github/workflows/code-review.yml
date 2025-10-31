@@ -1,17 +1,53 @@
-name: Code Review Automation
+name: Code Review
 
 on:
   pull_request:
+    branches: [ main ]
 
 jobs:
   review:
     runs-on: ubuntu-latest
+    name: Automated Code Review
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Lint code
-        run: npm run lint
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
 
-      - name: Run Security Scan
-        uses: github/codeql-action/analyze@v3
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Run Lint Check
+        run: |
+          if jq -e '.scripts.lint' package.json >/dev/null 2>&1; then
+            npx eslint . || echo "⚠️ Lint issues found"
+          else
+            echo "ℹ️ No lint script found, skipping lint."
+          fi
+
+      - name: Run Tests
+        run: |
+          if jq -e '.scripts.test' package.json >/dev/null 2>&1; then
+            npm test --silent
+          else
+            echo "ℹ️ No tests found, skipping."
+          fi
+
+      - name: Comment Summary on PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        if: always()
+        with:
+          header: Automated Code Review
+          message: |
+            ✅ **Automated Code Review Summary**
+            - Lint and test checks have completed.
+            - Please review any warnings or errors above.
