@@ -22,3 +22,4 @@ jobs:
           VERCEL_ORG_ID: malikusman73s-projects
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           VERCEL_EMAIL: malikusman3273@gmail.com
+
