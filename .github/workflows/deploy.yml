@@ -1,0 +1,22 @@
+name: Deploy to Vercel
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Deploy to Vercel
+        run: vercel --token=${{ secrets.VERCEL_TOKEN }} --prod --confirm --name heavens-above
+        env:
+          VERCEL_ORG_ID: malikusman73s-projects
+          VERCEL_PROJECT_NAME: heavens-above
+          VERCEL_EMAIL: malikusman3273@gmail.com

@@ -1,0 +1,18 @@
+name: Scheduled Maintenance
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # Runs every day at midnight
+  workflow_dispatch:
+
+jobs:
+  maintenance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run maintenance script
+        run: |
+          echo "Performing daily cleanup..."
+          npm run cleanup || echo "No cleanup script found"

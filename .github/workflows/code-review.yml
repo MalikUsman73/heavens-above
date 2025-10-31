@@ -1,0 +1,17 @@
+name: Code Review Automation
+
+on:
+  pull_request:
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Lint code
+        run: npm run lint
+
+      - name: Run Security Scan
+        uses: github/codeql-action/analyze@v3

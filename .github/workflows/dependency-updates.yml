@@ -1,0 +1,19 @@
+name: Dependency Updates
+
+on:
+  schedule:
+    - cron: "0 2 * * 1"  # Every Monday at 2 AM
+  workflow_dispatch:
+
+jobs:
+  dependabot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check for outdated dependencies
+        run: npm outdated || true
