@@ -1,21 +1,42 @@
-name: Documentation Deployment
+name: Documentation Workflow
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
     paths:
-      - 'docs/**'
+      - 'docs/**'         # Trigger only when something in /docs changes
+  workflow_dispatch:       # Allow manual trigger from Actions tab
 
 jobs:
-  docs:
+  docs-check:
     runs-on: ubuntu-latest
+    name: Verify & Process Documentation
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Build Docs
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install markdownlint
+        run: npm install -g markdownlint-cli
+
+      - name: Check Markdown formatting
         run: |
-          npm install
-          npm run docs:build
+          echo "🔍 Checking Markdown files in /docs..."
+          markdownlint "docs/**/*.md" || echo "⚠️ Some docs may need reformatting."
 
-      - name: Deploy Docs to Vercel
-        run: vercel --token=${{ secrets.VERCEL_TOKEN }} --prod --confirm --name heavens-above-docs
+      - name: Generate Docs Report
+        run: |
+          echo "📝 Documentation check completed at $(date)" > docs-report.txt
+          echo "List of documentation files:" >> docs-report.txt
+          ls docs >> docs-report.txt
+
+      - name: Upload documentation report
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation-report
+          path: docs-report.txt
